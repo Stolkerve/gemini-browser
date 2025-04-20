@@ -102,7 +102,10 @@ pub async fn handle_request(search: &String) -> Result<String, &str> {
                         GeminiStatus::Success => {
                             let document =
                                 String::from_utf8_lossy(&gemini_response.body).to_string();
-                            return Ok(parse_document_to_gems(&document, host_str));
+                            return Ok(parse_document_to_gems(
+                                &document,
+                                &format!("{}{}", host_str, url.path()),
+                            ));
                         }
                         status => {
                             return Err(status.to_str());
@@ -279,7 +282,7 @@ pub enum GeminiGem {
     PreformatToggle,
 }
 
-fn parse_document_to_gems(gemini_document: &String, request: &str) -> String {
+fn parse_document_to_gems(gemini_document: &String, mut request: &str) -> String {
     let lines = gemini_document.lines();
     let mut html_document = String::new();
     html_document.reserve(gemini_document.len());
@@ -289,17 +292,14 @@ fn parse_document_to_gems(gemini_document: &String, request: &str) -> String {
 
         if gem_type == GeminiGem::PreformatToggle {
             if line.starts_with("```") {
-                println!("end pre");
                 html_document.push_str("</pre>");
                 gem_type = GeminiGem::Text;
                 continue;
             }
-            println!("{}", line);
             html_document.push_str(&format!("{}", line));
             continue;
         }
         if line.starts_with("```") {
-            println!("start pre");
             html_document.push_str("<pre style=\"overflow: scroll;\">");
             gem_type = GeminiGem::PreformatToggle;
             continue;
@@ -351,6 +351,10 @@ fn parse_document_to_gems(gemini_document: &String, request: &str) -> String {
                         if let Some((idx, ' ')) = peekable.peek() {
                             let text = html_escape::encode_text(&line[*idx..]);
                             let (url_str, text) = decode_link_line(&text);
+                            if request.ends_with(".gmi") {
+                                request = &request[..request.len() - 4];
+                            }
+
                             if let Ok(url) = Url::parse(&url_str) {
                                 if url.scheme() == "http" || url.scheme() == "https" {
                                     html_document.push_str(&format!(
@@ -364,7 +368,7 @@ fn parse_document_to_gems(gemini_document: &String, request: &str) -> String {
                                     ));
                                 }
                             } else {
-                                if url_str.starts_with("/") {
+                                if url_str.starts_with("/") || request.ends_with("/") {
                                     html_document.push_str(&format!(
                                         "<a href=\"?search={}{}\">{}</a><br>",
                                         request, url_str, text
@@ -448,6 +452,6 @@ fn decode_link_line(link_line: &str) -> (String, String) {
         end_link = link_line.len()
     }
     let link_str = link_line[start_link..end_link].to_string();
-    let text_str = link_line[start_text..link_line.len() - 1].to_string();
+    let text_str = link_line[start_text..link_line.len()].to_string();
     return (link_str, text_str);
 }
