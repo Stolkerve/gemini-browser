@@ -1,0 +1,16 @@
+[package]
+name = "gemini-browser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-files = "0.6.6"
+actix-web = "4.10.2"
+html-escape = "0.2.13"
+native-tls = "0.2.14"
+serde = {version = "1.0.219", features = ["derive"]}
+tinytemplate = "1.2.1"
+tokio = {version = "1.43.0", features = ["full"]}
+tokio-native-tls = "0.3.1"
+tokio-tls = "0.3.1"
+url = "2.5.4"
