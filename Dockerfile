@@ -1,5 +1,5 @@
 FROM alpine:3.21
-RUN apk add --no-cache rust cargo
+RUN apk add --no-cache rust cargo alpine-sdk openssl-dev
 COPY . /build
 WORKDIR /build
 RUN ["cargo", "build", "--release"]
