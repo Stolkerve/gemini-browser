@@ -296,7 +296,7 @@ fn parse_document_to_gems(gemini_document: &String, mut request: &str) -> String
                 gem_type = GeminiGem::Text;
                 continue;
             }
-            html_document.push_str(&format!("{}", line));
+            html_document.push_str(&format!("{}\n", line));
             continue;
         }
         if line.starts_with("```") {
